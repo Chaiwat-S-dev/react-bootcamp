@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>React ทีละขั้น — บูทแคมป์ฝึกทำ</title>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Sarabun:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root {
+    --ink: #1a1614;
+    --paper: #f4ede0;
+    --paper-deep: #e9dec9;
+    --accent: #d6492f;
+    --accent-deep: #a8351f;
+    --teal: #1f6f6a;
+    --gold: #c8962f;
+    --line: #2a2422;
+    --code-bg: #211d1b;
+    --code-fg: #f0e6d6;
+    --ok: #2f7a3f;
+    --shadow: 6px 6px 0 var(--line);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: var(--paper);
+    background-image:
+      radial-gradient(var(--paper-deep) 1px, transparent 1px);
+    background-size: 22px 22px;
+    color: var(--ink);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- HEADER ---------- */
+  header {
+    border-bottom: 3px solid var(--line);
+    padding: 56px 0 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: "</>";
+    position: absolute;
+    right: -10px; top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 200px;
+    font-weight: 700;
+    color: var(--paper-deep);
+    z-index: 0;
+    line-height: 1;
+  }
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    font-weight: 700;
+    position: relative; z-index: 1;
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(42px, 7vw, 76px);
+    font-weight: 900;
+    line-height: 1.02;
+    margin: 12px 0 16px;
+    letter-spacing: -1.5px;
+    position: relative; z-index: 1;
+  }
+  h1 .hl {
+    background: var(--accent);
+    color: var(--paper);
+    padding: 0 12px;
+    display: inline-block;
+    transform: rotate(-1.5deg);
+  }
+  .lede {
+    font-size: 18px;
+    max-width: 620px;
+    position: relative; z-index: 1;
+  }
+  .badge-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; position: relative; z-index: 1; }
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 6px 12px;
+    border-radius: 2px;
+  }
+
+  /* ---------- PROGRESS ---------- */
+  .progress-bar {
+    position: sticky; top: 0; z-index: 50;
+    background: var(--paper);
+    border-bottom: 3px solid var(--line);
+    padding: 12px 0;
+  }
+  .progress-track {
+    display: flex; gap: 8px; align-items: center;
+    flex-wrap: wrap;
+  }
+  .pdot {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 700;
+    width: 30px; height: 30px;
+    border: 2.5px solid var(--line);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--paper);
+    cursor: pointer;
+    transition: transform .12s ease;
+    flex-shrink: 0;
+  }
+  .pdot:hover { transform: translateY(-2px); }
+  .pdot.done { background: var(--ok); color: #fff; border-color: var(--ok); }
+  .pdot.active { background: var(--accent); color: #fff; border-color: var(--accent); transform: scale(1.12); }
+  .pline { flex: 1; height: 2.5px; background: var(--line); min-width: 8px; }
+  .pcount {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 700;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  /* ---------- LESSON ---------- */
+  .lesson { padding: 48px 0; border-bottom: 2px dashed var(--line); }
+  .lesson:last-of-type { border-bottom: none; }
+  .lesson-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 700;
+    color: var(--teal);
+    letter-spacing: 1px;
+  }
+  .lesson h2 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(28px, 4.5vw, 42px);
+    font-weight: 900;
+    line-height: 1.1;
+    margin: 6px 0 18px;
+    letter-spacing: -0.5px;
+  }
+  .lesson h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px; font-weight: 600;
+    margin: 28px 0 10px;
+  }
+  .lesson p { margin-bottom: 12px; }
+  .lesson p a { color: var(--accent-deep); }
+
+  .concept {
+    background: var(--paper-deep);
+    border: 2.5px solid var(--line);
+    border-radius: 4px;
+    padding: 20px 22px;
+    margin: 18px 0;
+  }
+  .concept .ct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--accent-deep);
+    margin-bottom: 8px;
+  }
+  ul.tips { list-style: none; }
+  ul.tips li {
+    padding-left: 24px; position: relative; margin-bottom: 6px;
+  }
+  ul.tips li::before {
+    content: "▸"; position: absolute; left: 4px;
+    color: var(--accent); font-weight: 700;
+  }
+  code.inline {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--ink);
+    color: var(--gold);
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-size: 0.86em;
+  }
+
+  /* ---------- TASK CARD ---------- */
+  .task {
+    border: 3px solid var(--line);
+    border-radius: 6px;
+    margin: 26px 0;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .task-head {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .task-head .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700; font-size: 13px;
+    background: var(--accent);
+    padding: 4px 10px; border-radius: 3px;
+  }
+  .task-head .title {
+    font-family: 'Fraunces', serif;
+    font-weight: 600; font-size: 19px;
+  }
+  .task-body { padding: 20px; }
+  .task-prompt { margin-bottom: 14px; }
+  .task-prompt strong { color: var(--accent-deep); }
+
+  .editor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 720px) {
+    .editor-grid { grid-template-columns: 1fr; }
+    header::before { font-size: 120px; }
+  }
+
+  .editor-col label, .preview-col label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    display: block; margin-bottom: 6px;
+  }
+  textarea.code {
+    width: 100%;
+    min-height: 220px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border: 2.5px solid var(--line);
+    border-radius: 4px;
+    padding: 14px;
+    resize: vertical;
+    tab-size: 2;
+  }
+  textarea.code:focus { outline: 3px solid var(--gold); }
+
+  .preview-box {
+    border: 2.5px solid var(--line);
+    border-radius: 4px;
+    background: #fff;
+    min-height: 220px;
+    padding: 16px;
+    overflow: auto;
+  }
+  .preview-box.err {
+    background: #fbe9e6;
+    color: var(--accent-deep);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+  }
+
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  button.act {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700; font-size: 13px;
+    padding: 11px 20px;
+    border: 2.5px solid var(--line);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform .1s ease, box-shadow .1s ease;
+    box-shadow: 3px 3px 0 var(--line);
+  }
+  button.act:active { transform: translate(3px,3px); box-shadow: none; }
+  button.run { background: var(--accent); color: #fff; }
+  button.solve { background: var(--paper-deep); color: var(--ink); }
+  button.reset { background: var(--paper); color: var(--ink); }
+  button.check { background: var(--teal); color: #fff; }
+
+  .hint {
+    margin-top: 14px;
+    border-left: 4px solid var(--gold);
+    background: rgba(200,150,47,0.12);
+    padding: 10px 14px;
+    font-size: 14px;
+    display: none;
+  }
+  .hint.show { display: block; }
+  .hint summary {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700; font-size: 12px;
+    cursor: pointer; color: var(--accent-deep);
+  }
+
+  .verdict {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 14px;
+    display: none;
+  }
+  .verdict.ok { display: block; background: rgba(47,122,63,0.15); color: var(--ok); border: 2px solid var(--ok); }
+  .verdict.no { display: block; background: rgba(214,73,47,0.12); color: var(--accent-deep); border: 2px solid var(--accent); }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 44px 0;
+    margin-top: 20px;
+  }
+  footer h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 26px; font-weight: 900;
+    margin-bottom: 12px;
+  }
+  footer .next-list { list-style: none; }
+  footer .next-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #443c38;
+    font-size: 15px;
+  }
+  footer .next-list li code {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--gold);
+  }
+  .complete-banner {
+    background: var(--ok);
+    color: #fff;
+    text-align: center;
+    padding: 18px;
+    font-family: 'Fraunces', serif;
+    font-size: 22px; font-weight: 900;
+    border-radius: 6px;
+    margin: 24px 0;
+    display: none;
+  }
+  .complete-banner.show { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="kicker">Frontend Learning Path · ระดับต่อยอด</div>
+    <h1>เรียน <span class="hl">React</span><br>ทีละขั้น ทีละโจทย์</h1>
+    <p class="lede">ต่อจากหน้า profile ที่คุณเคยทำ — คราวนี้มาเข้าใจหัวใจของ React จริง ๆ ผ่านโจทย์ที่ต้องลงมือพิมพ์โค้ดเองในเบราว์เซอร์ แล้วเห็นผลทันที</p>
+    <div class="badge-row">
+      <span class="badge">12 บทเรียน</span>
+      <span class="badge">รันโค้ดได้จริง</span>
+      <span class="badge">มีเฉลย + คำใบ้</span>
+      <span class="badge">React 18</span>
+    </div>
+  </div>
+</header>
+
+<div class="progress-bar">
+  <div class="wrap">
+    <div class="progress-track" id="progressTrack"></div>
+  </div>
+</div>
+
+<div class="wrap" id="lessons"></div>
+
+<div class="wrap">
+  <div class="complete-banner" id="completeBanner">🎉 จบครบ 12 บท! คุณพร้อมไปต่อแล้ว</div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <h3>ก้าวต่อไปหลังจบบูทแคมป์นี้</h3>
+    <ul class="next-list">
+      <li>ลองตั้งโปรเจกต์จริงด้วย <code>npm create vite@latest</code> แทนการเขียนใน HTML ไฟล์เดียว</li>
+      <li>ศึกษา <code>useReducer</code> และ <code>Context</code> สำหรับ state ที่ซับซ้อนขึ้น</li>
+      <li>เพิ่ม routing ด้วย <code>react-router</code> เพื่อทำเว็บหลายหน้า</li>
+      <li>เขียน custom hooks ของตัวเอง เช่น <code>useLocalStorage</code></li>
+      <li>นำหน้า profile เดิมมาแปลงเป็น React component แยกส่วน</li>
+    </ul>
+  </div>
+</footer>
+
+<script type="text/babel" data-presets="env,react">
+/* ============================================================
+   เนื้อหาบทเรียน — แต่ละบทมี: แนวคิด + โจทย์ + starter + เฉลย
+   ============================================================ */
+const LESSONS = [
+  {
+    id: 1,
+    tag: "BAB 01 · JSX",
+    title: "JSX — เขียน HTML ใน JavaScript",
+    intro: "React ไม่ได้ใช้ HTML ธรรมดา แต่ใช้ JSX ซึ่งคือ syntax ที่ให้เราเขียนโครงสร้างหน้าตาปนกับ logic ได้ JSX จะถูกแปลงเป็น JavaScript เบื้องหลัง",
+    concepts: [
+      "ใช้ <code class='inline'>className</code> แทน <code class='inline'>class</code> (เพราะ class เป็นคำสงวนของ JS)",
+      "ใส่ค่า JavaScript ลงใน JSX ด้วยปีกกา <code class='inline'>{ }</code>",
+      "ทุก component ต้อง return element เดียว — ครอบด้วย <code class='inline'>&lt;div&gt;</code> หรือ Fragment <code class='inline'>&lt;&gt;&lt;/&gt;</code>",
+      "ปิด tag ทุกตัวเสมอ เช่น <code class='inline'>&lt;br /&gt;</code>"
+    ],
+    prompt: "สร้าง component ชื่อ <strong>Welcome</strong> ที่แสดงชื่อของคุณในแท็ก <code class='inline'>h1</code> และคำทักทายในแท็ก <code class='inline'>p</code> โดยให้ดึงค่าชื่อมาจากตัวแปร <code class='inline'>name</code>",
+    starter:
+`function Welcome() {
+  const name = "ใส่ชื่อคุณที่นี่";
+  // TODO: return h1 ที่แสดง name และ p ที่ทักทาย
+  return (
+    <div>
+
+    </div>
+  );
+}`,
+    solution:
+`function Welcome() {
+  const name = "ใส่ชื่อคุณที่นี่";
+  return (
+    <div>
+      <h1>สวัสดี {name}</h1>
+      <p>ยินดีต้อนรับสู่โลกของ React</p>
+    </div>
+  );
+}`,
+    component: "Welcome",
+    hint: "ใน JSX ใช้ {name} เพื่อแทรกค่าตัวแปร และอย่าลืมว่า return ได้แค่ element เดียว จึงต้องมี div ครอบ",
+    check: (html) => /<h1[^>]*>/.test(html) && /<p[^>]*>/.test(html)
+  },
+  {
+    id: 2,
+    tag: "BAB 02 · PROPS",
+    title: "Props — ส่งข้อมูลเข้า component",
+    intro: "Props คือวิธีส่งข้อมูลจาก component แม่ไปลูก ทำให้ component หนึ่งตัวนำกลับมาใช้ซ้ำได้ด้วยข้อมูลต่างกัน — เหมือนพารามิเตอร์ของฟังก์ชัน",
+    concepts: [
+      "Component รับ props เป็น argument ตัวแรก: <code class='inline'>function Card(props)</code>",
+      "นิยมใช้ destructuring: <code class='inline'>function Card({ title, year })</code>",
+      "ส่ง props ตอนเรียกใช้: <code class='inline'>&lt;Card title=\"...\" /&gt;</code>",
+      "props เป็นแบบ read-only — component ลูกห้ามแก้ค่า props"
+    ],
+    prompt: "สร้าง component <strong>SkillCard</strong> ที่รับ props <code class='inline'>name</code> และ <code class='inline'>level</code> แล้วแสดงผล จากนั้นใน <code class='inline'>App</code> เรียกใช้ SkillCard <strong>2 ครั้ง</strong> ด้วยทักษะต่างกัน",
+    starter:
+`function SkillCard({ name, level }) {
+  // TODO: แสดง name และ level
+  return (
+    <div style={{border:"1px solid #ccc", padding:"8px", margin:"6px 0"}}>
+
+    </div>
+  );
+}
+
+function App() {
+  // TODO: เรียก SkillCard 2 ครั้ง
+  return (
+    <div>
+
+    </div>
+  );
+}`,
+    solution:
+`function SkillCard({ name, level }) {
+  return (
+    <div style={{border:"1px solid #ccc", padding:"8px", margin:"6px 0"}}>
+      <strong>{name}</strong> — ระดับ: {level}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div>
+      <SkillCard name="HTML" level="คล่อง" />
+      <SkillCard name="React" level="กำลังเรียน" />
+    </div>
+  );
+}`,
+    component: "App",
+    hint: "ใน App ให้วาง <SkillCard name=\"...\" level=\"...\" /> สองตัวซ้อนกัน ภายใน div เดียว",
+    check: (html) => (html.match(/ระดับ/g) || []).length >= 2
+  },
+  {
+    id: 3,
+    tag: "BAB 03 · STATE",
+    title: "useState — ข้อมูลที่เปลี่ยนได้",
+    intro: "State คือข้อมูลที่ component จำไว้และเปลี่ยนแปลงได้ เมื่อ state เปลี่ยน React จะ render หน้าจอใหม่ให้อัตโนมัติ นี่คือหัวใจที่ทำให้หน้าเว็บ 'มีชีวิต'",
+    concepts: [
+      "เรียกใช้: <code class='inline'>const [count, setCount] = React.useState(0)</code>",
+      "ในโปรเจกต์จริงจะ import มาใช้เป็น <code class='inline'>useState</code> เฉย ๆ — แต่ในไฟล์ฝึกนี้พิมพ์ <code class='inline'>React.useState</code>",
+      "ตัวแรกคือค่าปัจจุบัน ตัวที่สองคือฟังก์ชันสำหรับเปลี่ยนค่า",
+      "ห้ามแก้ค่า state ตรง ๆ ต้องเรียกผ่าน setter เสมอ",
+      "ทุกครั้งที่เรียก setter, component จะ render ใหม่"
+    ],
+    prompt: "สร้างตัวนับ <strong>Counter</strong> ที่มีปุ่ม 2 ปุ่ม: ปุ่ม <code class='inline'>+1</code> เพิ่มค่า และปุ่ม <code class='inline'>รีเซ็ต</code> ทำให้กลับเป็น 0 พร้อมแสดงค่าปัจจุบัน",
+    starter:
+`function Counter() {
+  // TODO: ประกาศ state ชื่อ count เริ่มที่ 0
+  return (
+    <div>
+      <h2>ค่าตอนนี้: ?</h2>
+      <button>+1</button>
+      <button>รีเซ็ต</button>
+    </div>
+  );
+}`,
+    solution:
+`function Counter() {
+  const [count, setCount] = React.useState(0);
+  return (
+    <div>
+      <h2>ค่าตอนนี้: {count}</h2>
+      <button onClick={() => setCount(count + 1)}>+1</button>
+      <button onClick={() => setCount(0)}>รีเซ็ต</button>
+    </div>
+  );
+}`,
+    component: "Counter",
+    hint: "ใช้ React.useState(0) และผูก onClick กับ arrow function ที่เรียก setCount เช่น onClick={() => setCount(count + 1)}",
+    check: (html) => /ค่าตอนนี้: 0/.test(html)
+  },
+  {
+    id: 4,
+    tag: "BAB 04 · EVENTS",
+    title: "Events — รับ input จากผู้ใช้",
+    intro: "การจับ event เช่นการพิมพ์หรือการคลิก คือสะพานเชื่อมระหว่างผู้ใช้กับ state ใน React เรามักจับค่าจาก input ผ่าน onChange แล้วเก็บลง state",
+    concepts: [
+      "<code class='inline'>onChange</code> ทำงานทุกครั้งที่ค่า input เปลี่ยน",
+      "อ่านค่าที่พิมพ์จาก <code class='inline'>e.target.value</code>",
+      "Controlled input: ผูก <code class='inline'>value</code> ของ input กับ state",
+      "รูปแบบ: พิมพ์ → onChange → setState → re-render"
+    ],
+    prompt: "สร้าง <strong>LiveGreeting</strong>: มีช่อง input ให้พิมพ์ชื่อ และข้อความด้านล่างที่อัปเดต<strong>ทันที</strong>ตามที่พิมพ์ เช่นพิมพ์ 'แอน' แล้วโชว์ 'สวัสดี แอน!'",
+    starter:
+`function LiveGreeting() {
+  const [text, setText] = React.useState("");
+  return (
+    <div>
+      <input placeholder="พิมพ์ชื่อ..." />
+      <h2>สวัสดี !</h2>
+    </div>
+  );
+}`,
+    solution:
+`function LiveGreeting() {
+  const [text, setText] = React.useState("");
+  return (
+    <div>
+      <input
+        placeholder="พิมพ์ชื่อ..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
+      <h2>สวัสดี {text}!</h2>
+    </div>
+  );
+}`,
+    component: "LiveGreeting",
+    hint: "ผูก value={text} และ onChange={(e) => setText(e.target.value)} เข้ากับ input แล้วแสดง {text} ในข้อความ",
+    check: (html) => /<input/.test(html) && /สวัสดี/.test(html)
+  },
+  {
+    id: 5,
+    tag: "BAB 05 · LISTS",
+    title: "แสดงรายการด้วย .map()",
+    intro: "ในงานจริงข้อมูลมักเป็น array — รายการสินค้า, รายชื่อ, โพสต์ React ใช้ .map() เปลี่ยน array ของข้อมูลให้กลายเป็น array ของ JSX element",
+    concepts: [
+      "ใช้ <code class='inline'>array.map(item => &lt;li&gt;{item}&lt;/li&gt;)</code>",
+      "ทุก element ในลิสต์ต้องมี prop <code class='inline'>key</code> ที่ไม่ซ้ำกัน",
+      "key ช่วยให้ React รู้ว่า item ไหนเปลี่ยน เพื่อ update ได้เร็ว",
+      "อย่าใช้ index เป็น key ถ้าลิสต์มีการเพิ่ม/ลบ/สลับ"
+    ],
+    prompt: "มี array <code class='inline'>fruits</code> อยู่แล้ว — ใช้ <code class='inline'>.map()</code> แสดงผลไม้ทุกตัวเป็น <code class='inline'>&lt;li&gt;</code> ภายใน <code class='inline'>&lt;ul&gt;</code> อย่าลืมใส่ <code class='inline'>key</code>",
+    starter:
+`function FruitList() {
+  const fruits = ["มะม่วง", "ทุเรียน", "มังคุด"];
+  return (
+    <div>
+      <h3>ผลไม้ที่ชอบ</h3>
+      <ul>
+        {/* TODO: ใช้ fruits.map(...) ตรงนี้ */}
+      </ul>
+    </div>
+  );
+}`,
+    solution:
+`function FruitList() {
+  const fruits = ["มะม่วง", "ทุเรียน", "มังคุด"];
+  return (
+    <div>
+      <h3>ผลไม้ที่ชอบ</h3>
+      <ul>
+        {fruits.map((fruit, i) => (
+          <li key={i}>{fruit}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}`,
+    component: "FruitList",
+    hint: "ภายใน ul ใส่ {fruits.map((fruit, i) => <li key={i}>{fruit}</li>)} — สังเกตปีกกาที่ครอบ map",
+    check: (html) => (html.match(/<li/g) || []).length >= 3
+  },
+  {
+    id: 6,
+    tag: "BAB 06 · EFFECT",
+    title: "useEffect — งานที่ทำหลัง render",
+    intro: "useEffect ใช้จัดการ 'side effect' — งานที่ไม่เกี่ยวกับการ render โดยตรง เช่น ตั้งเวลา, เรียก API, เปลี่ยน title ของหน้า มันทำงานหลังจากที่ React render เสร็จ",
+    concepts: [
+      "<code class='inline'>React.useEffect(() => { ... }, [])</code> — array ว่าง = ทำครั้งเดียวตอน mount",
+      "ในโปรเจกต์จริง import มาใช้เป็น <code class='inline'>useEffect</code> — ไฟล์ฝึกนี้พิมพ์ <code class='inline'>React.useEffect</code>",
+      "ใส่ตัวแปรใน dependency array = ทำซ้ำเมื่อตัวแปรนั้นเปลี่ยน",
+      "return ฟังก์ชันจาก effect เพื่อ cleanup เช่น <code class='inline'>clearInterval</code>",
+      "เหมาะกับ: timer, fetch, event listener, subscription"
+    ],
+    prompt: "สร้าง <strong>Timer</strong> ที่นับวินาทีขึ้นเองอัตโนมัติทุก 1 วินาที โดยใช้ <code class='inline'>setInterval</code> ภายใน <code class='inline'>useEffect</code> และอย่าลืม cleanup",
+    starter:
+`function Timer() {
+  const [sec, setSec] = React.useState(0);
+  // TODO: ใช้ useEffect ตั้ง setInterval เพิ่ม sec ทุก 1 วินาที
+  return <h2>ผ่านไปแล้ว {sec} วินาที</h2>;
+}`,
+    solution:
+`function Timer() {
+  const [sec, setSec] = React.useState(0);
+  React.useEffect(() => {
+    const id = setInterval(() => {
+      setSec(s => s + 1);
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return <h2>ผ่านไปแล้ว {sec} วินาที</h2>;
+}`,
+    component: "Timer",
+    hint: "ใช้ setSec(s => s + 1) แบบ functional update เพื่อให้ค่าถูกต้อง และ return () => clearInterval(id) เพื่อ cleanup ใส่ [] เป็น dependency",
+    check: (html) => /ผ่านไปแล้ว/.test(html)
+  },
+  {
+    id: 7,
+    tag: "BAB 07 · REDUCER",
+    title: "useReducer — state machine สำหรับ logic ที่ซับซ้อนขึ้น",
+    intro: "เมื่อ state มีหลายฟิลด์หรือมี action หลายแบบที่เปลี่ยน state ต่างกัน useState จะเริ่มเละ useReducer คือ pattern เดียวกับ event-driven state machine: รับ action → reducer คืน state ใหม่ ถ้าเคยเขียน switch case ใน handler ของ MQTT หรือ gRPC stream — คุณรู้จัก pattern นี้แล้ว",
+    concepts: [
+      "<code class='inline'>const [state, dispatch] = React.useReducer(reducer, initialState)</code>",
+      "reducer คือ pure function: <code class='inline'>(state, action) => newState</code> — เหมือน handler ที่ไม่มี side effect",
+      "dispatch action เป็น object เช่น <code class='inline'>{ type: 'add', text: '...' }</code>",
+      "เทียบ Go: คล้าย channel รับ command แล้วมี loop switch ตัดสินใจเปลี่ยน state",
+      "ห้าม mutate state ตรง ๆ ต้องคืน array/object ใหม่เสมอ"
+    ],
+    prompt: "สร้าง <strong>TodoApp</strong> ที่เก็บ todo เป็น array ใช้ <code class='inline'>useReducer</code> รองรับ action <code class='inline'>add</code> และ <code class='inline'>remove</code>",
+    starter:
+`function todoReducer(state, action) {
+  // TODO: รองรับ action type 'add' และ 'remove'
+  return state;
+}
+
+function TodoApp() {
+  const [todos, dispatch] = React.useReducer(todoReducer, []);
+  const [text, setText] = React.useState("");
+
+  return (
+    <div>
+      <input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="พิมพ์งาน..."
+      />
+      <button onClick={() => { /* TODO: dispatch add */ }}>เพิ่ม</button>
+      <ul>
+        {todos.map(t => (
+          <li key={t.id}>
+            {t.text}{" "}
+            <button onClick={() => { /* TODO: dispatch remove */ }}>ลบ</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}`,
+    solution:
+`function todoReducer(state, action) {
+  switch (action.type) {
+    case 'add':
+      return [...state, { id: Date.now(), text: action.text }];
+    case 'remove':
+      return state.filter(t => t.id !== action.id);
+    default:
+      return state;
+  }
+}
+
+function TodoApp() {
+  const [todos, dispatch] = React.useReducer(todoReducer, []);
+  const [text, setText] = React.useState("");
+
+  const handleAdd = () => {
+    if (!text.trim()) return;
+    dispatch({ type: 'add', text });
+    setText("");
+  };
+
+  return (
+    <div>
+      <input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="พิมพ์งาน..."
+      />
+      <button onClick={handleAdd}>เพิ่ม</button>
+      <ul>
+        {todos.map(t => (
+          <li key={t.id}>
+            {t.text}{" "}
+            <button onClick={() => dispatch({ type: 'remove', id: t.id })}>ลบ</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}`,
+    component: "TodoApp",
+    hint: "ใน reducer ใช้ switch(action.type) — case 'add' คืน [...state, newItem]; case 'remove' คืน state.filter(...) — ห้าม push/splice บน state ตรง ๆ",
+    check: (html) => /<input/.test(html) && /เพิ่ม<\/button>/.test(html)
+  },
+  {
+    id: 8,
+    tag: "BAB 08 · CONTEXT",
+    title: "Context — ส่งข้อมูลข้าม component โดยไม่ผ่าน props",
+    intro: "เมื่อต้องส่งข้อมูลลึกหลายชั้น (theme, user, locale) การ pass props ทุกชั้น (prop drilling) น่ารำคาญ Context สร้าง 'scope' ที่ descendant ทุกตัวเข้าถึงได้ — เทียบ backend คือ request-scoped value ใน Go context.WithValue หรือ DI container",
+    concepts: [
+      "<code class='inline'>const Ctx = React.createContext(defaultValue)</code> — สร้าง scope",
+      "ครอบด้วย Provider: <code class='inline'>&lt;Ctx.Provider value={...}&gt;...&lt;/Ctx.Provider&gt;</code>",
+      "ใช้ใน descendant: <code class='inline'>const v = React.useContext(Ctx)</code>",
+      "เทียบ Go: คล้าย <code class='inline'>context.WithValue</code> แต่ component re-render เมื่อ value เปลี่ยน",
+      "อย่าใช้เก็บทุก state — overuse ทำให้ re-render บานปลาย เก็บแค่ข้อมูล 'ระดับแอป'"
+    ],
+    prompt: "สร้าง <code class='inline'>ThemeContext</code> ใน <code class='inline'>App</code> ส่งค่า <code class='inline'>\"dark\"</code> ผ่าน Provider แล้วให้ <strong>Card</strong> ดึง theme ผ่าน <code class='inline'>useContext</code> มาแสดง",
+    starter:
+`const ThemeContext = React.createContext('light');
+
+function Card() {
+  // TODO: ดึง theme จาก context มาใช้
+  return <div>เนื้อหาในการ์ด</div>;
+}
+
+function App() {
+  // TODO: ครอบ <Card /> ด้วย ThemeContext.Provider value="dark"
+  return (
+    <div>
+      <Card />
+    </div>
+  );
+}`,
+    solution:
+`const ThemeContext = React.createContext('light');
+
+function Card() {
+  const theme = React.useContext(ThemeContext);
+  const style = theme === 'dark'
+    ? { background: '#222', color: '#fff', padding: '12px' }
+    : { background: '#eee', color: '#000', padding: '12px' };
+  return <div style={style}>ธีมตอนนี้: {theme}</div>;
+}
+
+function App() {
+  return (
+    <ThemeContext.Provider value="dark">
+      <Card />
+    </ThemeContext.Provider>
+  );
+}`,
+    component: "App",
+    hint: "ใน Card เรียก React.useContext(ThemeContext) — ใน App ครอบด้วย <ThemeContext.Provider value=\"dark\">...</ThemeContext.Provider>",
+    check: (html) => /ธีมตอนนี้: dark/.test(html)
+  },
+  {
+    id: 9,
+    tag: "BAB 09 · CUSTOM HOOK",
+    title: "Custom Hooks — รวม logic ที่ใช้ซ้ำเป็นฟังก์ชันของตัวเอง",
+    intro: "เมื่อมี logic เดียวกันต้องใช้หลายที่ (อ่าน localStorage, ตามตำแหน่ง mouse, fetch ข้อมูล) แทนที่จะ copy-paste สร้าง custom hook คือฟังก์ชันที่ขึ้นต้นด้วย <code class='inline'>use</code> และเรียก hook อื่นข้างใน เทียบ backend: คล้ายการแยก middleware composition หรือ helper ที่ห่อ side effect",
+    concepts: [
+      "ชื่อต้องขึ้นต้น <code class='inline'>use</code> — React ใช้ชื่อจับว่าเป็น hook",
+      "เรียก React.useState/useEffect/ฯลฯ ข้างในได้ตามปกติ",
+      "คืนค่าอะไรก็ได้ — primitive, array (เหมือน useState) หรือ object",
+      "แต่ละ component ที่เรียก hook ได้ state แยกกัน — ไม่ share",
+      "กฎเดียวกับ hook อื่น: top-level เท่านั้น ห้ามใน loop/if"
+    ],
+    prompt: "สร้าง custom hook <code class='inline'>useCounter(initial)</code> ที่คืน <code class='inline'>{ count, increment, reset }</code> แล้วใช้ใน <strong>DoubleCounter</strong> ที่มีตัวนับ 2 ตัวแยก state",
+    starter:
+`function useCounter(initial) {
+  // TODO: ใช้ React.useState + คืน { count, increment, reset }
+  return { count: 0, increment: () => {}, reset: () => {} };
+}
+
+function DoubleCounter() {
+  // TODO: เรียก useCounter 2 ครั้ง (ค่าเริ่ม 0 และ 10)
+  return (
+    <div>
+      <p>ตัวที่ 1: ?</p>
+      <p>ตัวที่ 2: ?</p>
+    </div>
+  );
+}`,
+    solution:
+`function useCounter(initial) {
+  const [count, setCount] = React.useState(initial);
+  return {
+    count,
+    increment: () => setCount(c => c + 1),
+    reset: () => setCount(initial),
+  };
+}
+
+function DoubleCounter() {
+  const a = useCounter(0);
+  const b = useCounter(10);
+  return (
+    <div>
+      <p>
+        ตัวที่ 1: {a.count}{" "}
+        <button onClick={a.increment}>+</button>{" "}
+        <button onClick={a.reset}>reset</button>
+      </p>
+      <p>
+        ตัวที่ 2: {b.count}{" "}
+        <button onClick={b.increment}>+</button>{" "}
+        <button onClick={b.reset}>reset</button>
+      </p>
+    </div>
+  );
+}`,
+    component: "DoubleCounter",
+    hint: "useCounter ใช้ React.useState ข้างใน แล้วคืน object {count, increment, reset} — ใน DoubleCounter เรียก useCounter(0) และ useCounter(10) แต่ละครั้งได้ state แยก",
+    check: (html) => /ตัวที่ 1: 0/.test(html) && /ตัวที่ 2: 10/.test(html)
+  },
+  {
+    id: 10,
+    tag: "BAB 10 · FETCH",
+    title: "Fetching ข้อมูล — loading, error, data state",
+    intro: "ในงานจริงเกือบทุก component ต้องดึงข้อมูลจาก API (ที่คุณเขียนใน Go/NestJS) — pattern มาตรฐานคือ track 3 state: loading, error, data คุณเคยทำสิ่งนี้ใน backend ตอนเรียก downstream service — ฝั่ง frontend คือกระจกสะท้อนกัน",
+    concepts: [
+      "useEffect รัน fetch ตอน mount (dep = <code class='inline'>[]</code>)",
+      "ต้องแยก state 3 ตัว: data, loading, error",
+      "useEffect callback คืน Promise ไม่ได้ — ใช้ <code class='inline'>.then()</code> หรือ async IIFE ข้างใน",
+      "เทียบ Go: คล้ายการเรียก <code class='inline'>http.Client.Do()</code> แล้ว switch ตาม err/status",
+      "ใน production จริงใช้ TanStack Query หรือ SWR — จัดการ cache, retry, dedup ให้"
+    ],
+    prompt: "สร้าง <strong>UserProfile</strong> ที่เรียก <code class='inline'>fakeFetch()</code> (จำลอง API) แล้วแสดง 3 state: กำลังโหลด / error / สำเร็จ (แสดง name, email)",
+    starter:
+`function fakeFetch() {
+  return new Promise(resolve => {
+    // จำลอง API — ปรับเป็น 500 เพื่อเห็น loading flash
+    setTimeout(() => resolve({ name: "สมชาย", email: "som@example.com" }), 0);
+  });
+}
+
+function UserProfile() {
+  // TODO: state — data, loading, error
+  // TODO: useEffect เรียก fakeFetch().then(setData)
+  return (
+    <div>
+      <h3>ข้อมูลผู้ใช้</h3>
+      {/* TODO: แสดง loading / error / data */}
+    </div>
+  );
+}`,
+    solution:
+`function fakeFetch() {
+  return new Promise(resolve => {
+    setTimeout(() => resolve({ name: "สมชาย", email: "som@example.com" }), 0);
+  });
+}
+
+function UserProfile() {
+  const [data, setData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    fakeFetch()
+      .then(result => {
+        setData(result);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
+  return (
+    <div>
+      <h3>ข้อมูลผู้ใช้</h3>
+      {loading && <p>กำลังโหลด...</p>}
+      {error && <p>ผิดพลาด: {error}</p>}
+      {data && (
+        <div>
+          <p>ชื่อ: {data.name}</p>
+          <p>อีเมล: {data.email}</p>
+        </div>
+      )}
+    </div>
+  );
+}`,
+    component: "UserProfile",
+    hint: "ประกาศ state 3 ตัว (data=null, loading=true, error=null) — ใน useEffect เรียก fakeFetch().then(d => { setData(d); setLoading(false); }) — render conditional ด้วย {loading && ...} {error && ...} {data && ...}",
+    check: (html) => /สมชาย/.test(html) || /กำลังโหลด/.test(html)
+  },
+  {
+    id: 11,
+    tag: "BAB 11 · CSS",
+    title: "CSS Layout — Flexbox สำหรับวาง element",
+    intro: "Flexbox ครอบคลุม 80% ของงาน layout จริง — ทุก flex container มี main axis และ cross axis เปลี่ยนทิศทางได้ด้วย flex-direction ในบทนี้ใช้ inline style ทั้งหมดเพื่อข้ามเรื่อง specificity ไปก่อน — เน้นเข้าใจ flexbox ก่อน",
+    concepts: [
+      "<code class='inline'>display: flex</code> บน parent → child เรียงตาม main axis (default = แนวนอน)",
+      "<code class='inline'>justify-content</code> จัดตาม main axis (<code class='inline'>center</code>, <code class='inline'>space-between</code>, ...)",
+      "<code class='inline'>align-items</code> จัดตาม cross axis (<code class='inline'>center</code>, <code class='inline'>stretch</code>, ...)",
+      "<code class='inline'>gap</code> = ระยะห่างระหว่าง child — ใช้แทน margin",
+      "<code class='inline'>flex: 1</code> บน child = ขยายเต็มพื้นที่ที่เหลือ — ทุก child เป็น flex:1 จะเท่ากันหมด"
+    ],
+    prompt: "สร้าง <strong>CardRow</strong> ที่มีการ์ด 3 ใบเรียงแนวนอน ขนาดเท่ากัน (<code class='inline'>flex: 1</code>) เว้นห่างเท่ากัน (<code class='inline'>gap</code>) พื้นหลังสีเข้ม ตัวอักษรอ่อน — ใช้ inline style ทั้งหมด",
+    starter:
+`function CardRow() {
+  const cards = ["A", "B", "C"];
+  return (
+    <div style={{ /* TODO: flex container + gap */ }}>
+      {cards.map(c => (
+        <div key={c} style={{ /* TODO: flex:1 + bg เข้ม + ตัวอักษรอ่อน */ }}>
+          การ์ด {c}
+        </div>
+      ))}
+    </div>
+  );
+}`,
+    solution:
+`function CardRow() {
+  const cards = ["A", "B", "C"];
+  return (
+    <div style={{ display: 'flex', gap: '12px', padding: '12px' }}>
+      {cards.map(c => (
+        <div key={c} style={{
+          flex: 1,
+          background: '#1f6f6a',
+          color: '#f4ede0',
+          padding: '20px',
+          textAlign: 'center',
+          borderRadius: '4px'
+        }}>
+          การ์ด {c}
+        </div>
+      ))}
+    </div>
+  );
+}`,
+    component: "CardRow",
+    hint: "parent: display:'flex', gap:'12px' — child: flex:1, background สีเข้ม, color สีอ่อน, padding ให้ดูเป็นการ์ด",
+    check: (html) => /display:\s*flex/i.test(html) && (html.match(/flex:\s*1/g) || []).length >= 3
+  },
+  {
+    id: 12,
+    tag: "BAB 12 · BUILD",
+    title: "ก้าวออกจากไฟล์เดียว — Vite, modules, bundling",
+    intro: "ไฟล์นี้ทำงานได้เพราะ Babel แปลง JSX ใน browser แบบ runtime — ช้า ไม่ optimize จัดการหลายไฟล์ไม่ไหว ในโปรเจกต์จริงใช้ build tool เช่น Vite/Webpack ทำ 3 อย่าง: (1) compile JSX → JS (2) bundle หลายไฟล์เป็นไม่กี่ไฟล์ (3) ตัดโค้ดที่ไม่ใช้ทิ้ง (tree-shaking) เทียบ <code class='inline'>go build</code>: รวม dep ทั้งหมดเป็น binary เดียว — แต่สำหรับเว็บ + มี dev server ที่ HMR ให้",
+    concepts: [
+      "<code class='inline'>npm create vite@latest myapp -- --template react</code> → ตั้งโปรเจกต์ใหม่",
+      "ใช้ <code class='inline'>import</code>/<code class='inline'>export</code> แทน define ทุกอย่างในไฟล์เดียว",
+      "Vite dev: ใช้ ES modules native ไม่ bundle → reload ภายในเสี้ยววินาที (HMR)",
+      "<code class='inline'>vite build</code> → bundle + minify + tree-shake สำหรับ production",
+      "Tree-shaking: ใช้ named import (<code class='inline'>import { x } from 'lib'</code>) เพื่อให้ build ตัดของที่ไม่ใช้ทิ้ง",
+      "เทียบ Go: เหมือน import path + dead code elimination ของ linker"
+    ],
+    prompt: "บทอ่าน — สร้าง <strong>ProjectStructure</strong> ที่แสดง file tree ของโปรเจกต์ Vite สมมติ โดย map จาก array <code class='inline'>files</code> ออกมาเป็น <code class='inline'>&lt;li&gt;</code> เพื่อเห็นภาพว่าโปรเจกต์จริงควรแยกไฟล์อย่างไร",
+    starter:
+`function ProjectStructure() {
+  const files = [
+    "src/main.jsx        — entry point (mount React)",
+    "src/App.jsx         — root component",
+    "src/components/     — UI ย่อย (LessonCard ฯลฯ)",
+    "src/hooks/          — custom hooks (เช่น useCounter)",
+    "src/lib/api.js      — เรียก backend Go ของคุณ",
+    "vite.config.js      — config build tool",
+    "package.json        — dependency list"
+  ];
+  // TODO: render files เป็น <li> ภายใน <ul>
+  return (
+    <div>
+      <h3>โครงสร้างโปรเจกต์ Vite</h3>
+    </div>
+  );
+}`,
+    solution:
+`function ProjectStructure() {
+  const files = [
+    "src/main.jsx        — entry point (mount React)",
+    "src/App.jsx         — root component",
+    "src/components/     — UI ย่อย (LessonCard ฯลฯ)",
+    "src/hooks/          — custom hooks (เช่น useCounter)",
+    "src/lib/api.js      — เรียก backend Go ของคุณ",
+    "vite.config.js      — config build tool",
+    "package.json        — dependency list"
+  ];
+  return (
+    <div>
+      <h3>โครงสร้างโปรเจกต์ Vite</h3>
+      <ul style={{ fontFamily: 'monospace', listStyle: 'none', padding: 0, lineHeight: 1.9 }}>
+        {files.map(f => <li key={f}>{f}</li>)}
+      </ul>
+      <p style={{ marginTop: '12px', fontSize: '14px' }}>
+        ลองรันจริง: <code>npm create vite@latest react-bootcamp-v2 -- --template react</code>
+      </p>
+    </div>
+  );
+}`,
+    component: "ProjectStructure",
+    hint: "ภายใน div เพิ่ม <ul> แล้ว files.map(f => <li key={f}>{f}</li>) — บทนี้เน้นแนวคิด ลองรัน npm create vite@latest จริงหลังจบ",
+    check: (html) => (html.match(/<li/g) || []).length >= 5
+  }
+];
+
+/* ============================================================
+   ระบบรันโค้ด — ใช้ Babel แปลง JSX ของผู้เรียนแล้ว render
+   React 18: createRoot ต้องเรียกครั้งเดียวต่อ container — cache ไว้ใน WeakMap
+   ============================================================ */
+const rootCache = new WeakMap();
+
+function runUserCode(code, componentName, mountEl) {
+  if (!mountEl) {
+    return { ok: false, error: "Preview container ยังไม่พร้อม — ลองกดอีกครั้ง" };
+  }
+  try {
+    const compiled = Babel.transform(code, { presets: ["react"] }).code;
+    const factory = new Function("React", compiled + "\nreturn " + componentName + ";");
+    const Comp = factory(React);
+    let root = rootCache.get(mountEl);
+    if (!root) {
+      root = ReactDOM.createRoot(mountEl);
+      rootCache.set(mountEl, root);
+    }
+    root.render(React.createElement(Comp));
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+/* ============================================================
+   การ์ดบทเรียนหนึ่งใบ
+   ============================================================ */
+function LessonCard({ lesson, index, onComplete }) {
+  const [code, setCode] = React.useState(lesson.starter);
+  const [showHint, setShowHint] = React.useState(false);
+  const [verdict, setVerdict] = React.useState(null); // 'ok' | 'no' | null
+  const previewRef = React.useRef(null);
+  const [errMsg, setErrMsg] = React.useState(null);
+
+  const handleRun = () => {
+    setErrMsg(null);
+    setVerdict(null);
+    const res = runUserCode(code, lesson.component, previewRef.current);
+    if (!res.ok) {
+      setErrMsg(res.error);
+    }
+  };
+
+  const handleCheck = () => {
+    setErrMsg(null);
+    // run ก่อนเพื่อให้ได้ผลลัพธ์ล่าสุด
+    const res = runUserCode(code, lesson.component, previewRef.current);
+    if (!res.ok) {
+      setErrMsg(res.error);
+      setVerdict('no');
+      return;
+    }
+    // ให้ React วาดเสร็จก่อนค่อยตรวจ
+    setTimeout(() => {
+      const html = previewRef.current ? previewRef.current.innerHTML : "";
+      const passed = lesson.check(html);
+      setVerdict(passed ? 'ok' : 'no');
+      if (passed) onComplete(lesson.id);
+    }, 60);
+  };
+
+  const handleSolve = () => {
+    setCode(lesson.solution);
+    setErrMsg(null);
+    setVerdict(null);
+  };
+
+  const handleReset = () => {
+    setCode(lesson.starter);
+    setErrMsg(null);
+    setVerdict(null);
+    const el = previewRef.current;
+    if (el) {
+      if (rootCache.has(el)) {
+        rootCache.get(el).unmount();
+        rootCache.delete(el);
+      }
+      el.innerHTML = '<span style="color:#999;font-size:13px;">กดปุ่ม "รันโค้ด" เพื่อดูผล</span>';
+    }
+  };
+
+  return (
+    <section className="lesson" id={"lesson-" + lesson.id}>
+      <div className="lesson-tag">{lesson.tag}</div>
+      <h2>{lesson.title}</h2>
+      <p>{lesson.intro}</p>
+
+      <div className="concept">
+        <div className="ct">สิ่งที่ต้องรู้</div>
+        <ul className="tips">
+          {lesson.concepts.map((c, i) => (
+            <li key={i} dangerouslySetInnerHTML={{ __html: c }} />
+          ))}
+        </ul>
+      </div>
+
+      <div className="task">
+        <div className="task-head">
+          <span className="num">โจทย์ {lesson.id}</span>
+          <span className="title">ลงมือทำ</span>
+        </div>
+        <div className="task-body">
+          <p className="task-prompt" dangerouslySetInnerHTML={{ __html: lesson.prompt }} />
+
+          <div className="editor-grid">
+            <div className="editor-col">
+              <label>โค้ดของคุณ — แก้ไขได้</label>
+              <textarea
+                className="code"
+                value={code}
+                spellCheck={false}
+                onChange={(e) => setCode(e.target.value)}
+              />
+            </div>
+            <div className="preview-col">
+              <label>ผลลัพธ์</label>
+              <div className="preview-box" ref={previewRef}>
+                <span style={{color:"#999", fontSize:"13px"}}>กดปุ่ม "รันโค้ด" เพื่อดูผล</span>
+              </div>
+              {errMsg && (
+                <div className="preview-box err" style={{marginTop:"8px"}}>⚠ เกิดข้อผิดพลาด:{"\n\n"}{errMsg}</div>
+              )}
+            </div>
+          </div>
+
+          <div className="btn-row">
+            <button className="act run" onClick={handleRun}>▶ รันโค้ด</button>
+            <button className="act check" onClick={handleCheck}>✓ ตรวจคำตอบ</button>
+            <button className="act solve" onClick={handleSolve}>ดูเฉลย</button>
+            <button className="act reset" onClick={handleReset}>เริ่มใหม่</button>
+            <button className="act reset" onClick={() => setShowHint(!showHint)}>
+              {showHint ? "ซ่อนคำใบ้" : "💡 คำใบ้"}
+            </button>
+          </div>
+
+          <div className={"hint" + (showHint ? " show" : "")}>
+            <strong>คำใบ้:</strong> {lesson.hint}
+          </div>
+
+          {verdict === 'ok' && (
+            <div className="verdict ok">✓ ถูกต้อง! ทำได้ดีมาก — ไปบทต่อไปกันเลย</div>
+          )}
+          {verdict === 'no' && (
+            <div className="verdict no">ยังไม่ผ่าน — ลองดูคำใบ้ หรือกดเฉลยเทียบดูนะ</div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   แอปหลัก — รวมทุกบท + progress bar
+   ============================================================ */
+function Bootcamp() {
+  const [done, setDone] = React.useState([]); // array ของ id ที่ผ่านแล้ว
+
+  const markDone = (id) => {
+    setDone(prev => prev.includes(id) ? prev : [...prev, id]);
+  };
+
+  // อัปเดต progress dots + complete banner ผ่าน DOM ภายนอก React tree
+  React.useEffect(() => {
+    const track = document.getElementById("progressTrack");
+    if (!track) return;
+    track.innerHTML = "";
+    LESSONS.forEach((l, i) => {
+      if (i > 0) {
+        const line = document.createElement("div");
+        line.className = "pline";
+        track.appendChild(line);
+      }
+      const dot = document.createElement("div");
+      dot.className = "pdot" + (done.includes(l.id) ? " done" : "");
+      dot.textContent = done.includes(l.id) ? "✓" : l.id;
+      dot.onclick = () => {
+        const el = document.getElementById("lesson-" + l.id);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+      track.appendChild(dot);
+    });
+    const count = document.createElement("div");
+    count.className = "pcount";
+    count.textContent = done.length + " / " + LESSONS.length + " บท";
+    track.appendChild(count);
+
+    const banner = document.getElementById("completeBanner");
+    if (banner) banner.className = "complete-banner" + (done.length === LESSONS.length ? " show" : "");
+  }, [done]);
+
+  return (
+    <div>
+      {LESSONS.map((lesson, i) => (
+        <LessonCard
+          key={lesson.id}
+          lesson={lesson}
+          index={i}
+          onComplete={markDone}
+        />
+      ))}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("lessons")).render(<Bootcamp />);
+</script>
+
+</body>
+</html>
